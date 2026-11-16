@@ -1,0 +1,43 @@
+# EasyCart Proof of Concept: 3 containers
+#   postgres = the official record (orders, payments, stock_record, outbox_event, audit_log)
+#   redis    = the fast stock counter and the checkout hold
+#   api      = FastAPI REST API (open http://localhost:8000/docs)
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: easycart
+      POSTGRES_PASSWORD: easycart
+      POSTGRES_DB: easycart
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easycart -d easycart"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgresql://easycart:easycart@postgres:5432/easycart
+      REDIS_URL: redis://redis:6379/0
+      HOLD_SECONDS: "30"            # real design: 600 (10 minutes). Short here so the demo is quick.
+      WEBHOOK_SECRET: demo-secret   # fake secret, for the simulated PayMongo webhook only
+    volumes:
+      - ./scripts:/app/scripts:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
