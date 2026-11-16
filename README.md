@@ -23,5 +23,5 @@ EasyCart is a hypothetical Philippine marketplace for costumes and party supplie
 
 Not built in this PoC (designed in Phase 4 only): Kafka, Elasticsearch, pgvector, Neo4j, Snowflake and the Kong gateway. The outbox events are still saved in PostgreSQL, ready for Kafka. A simple role check inside the API stands in for the gateway.
 
-The checkout hold is 30 seconds here so the demo is quick. The real design uses 10 minutes (600 seconds).
+
 
